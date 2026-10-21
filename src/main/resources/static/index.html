@@ -1,0 +1,986 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Attendance System</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+
+        header {
+            background: #1d4ed8;
+            color: white;
+            padding: 24px;
+            text-align: center;
+        }
+
+        header h1 {
+            margin: 0 0 8px;
+        }
+
+        main {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 0 18px;
+        }
+
+        .card {
+            background: white;
+            padding: 24px;
+            margin-bottom: 22px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px #0000000d;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            margin-top: 8px;
+        }
+
+        button {
+            padding: 11px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            color: white;
+            background: #2563eb;
+            margin-top: 16px;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .delete-btn {
+            background: #dc2626;
+            margin: 0;
+        }
+
+        .attendance-btn {
+            margin: 3px;
+            padding: 9px 12px;
+        }
+
+        .present-btn {
+            background: #16a34a;
+        }
+
+        .absent-btn {
+            background: #dc2626;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+
+        th,
+        td {
+            padding: 13px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        th {
+            background: #eff6ff;
+        }
+
+        #message {
+            margin-top: 12px;
+        }
+
+        @media (max-width: 650px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+.dashboard-card {
+    background: #eff6ff;
+    padding: 18px;
+    border-radius: 10px;
+    text-align: center;
+    border: 1px solid #dbeafe;
+}
+
+.dashboard-card h3 {
+    margin: 5px 0 12px;
+    font-size: 16px;
+}
+
+.dashboard-card h2 {
+    margin: 0;
+    font-size: 30px;
+    color: #1d4ed8;
+}
+
+.main-nav {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.main-nav .nav-btn {
+    margin-top: 0;
+    background: #3b82f6;
+}
+
+.main-nav .nav-btn.active {
+    background: #ffffff;
+    color: #1d4ed8;
+}
+
+.screen {
+    display: none;
+}
+
+.screen.active {
+    display: block;
+}
+/* Login Page */
+body:not(.logged-in) header,
+body:not(.logged-in) main {
+    display: none;
+}
+
+.login-container {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    background: linear-gradient(135deg, #1d4ed8, #60a5fa);
+}
+
+.login-card {
+    width: 100%;
+    max-width: 400px;
+    padding: 35px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 8px 25px #00000030;
+}
+
+.login-card h1 {
+    text-align: center;
+    color: #1d4ed8;
+    font-size: 25px;
+}
+
+.login-card p {
+    text-align: center;
+    color: #64748b;
+}
+
+.login-card label {
+    display: block;
+    margin-top: 18px;
+}
+
+.login-card button {
+    width: 100%;
+    margin-top: 22px;
+}
+
+#loginMessage {
+    color: #dc2626;
+    text-align: center;
+}
+
+#logoutButton {
+    background: #dc2626;
+    margin-left: 10px;
+}
+    </style>
+</head>
+
+<body>
+<!-- Admin Login Page -->
+<div class="login-container" id="loginScreen">
+    <div class="login-card">
+
+        <h1>Admin Login</h1>
+        <p>Student Attendance System</p>
+
+        <form id="loginForm">
+
+            <label for="adminUsername">Username</label>
+            <input
+                type="text"
+                id="adminUsername"
+                placeholder="Enter admin username"
+                required
+            >
+
+            <label for="adminPassword">Password</label>
+            <input
+                type="password"
+                id="adminPassword"
+                placeholder="Enter admin password"
+                required
+            >
+
+            <button type="submit">Login</button>
+
+            <p id="loginMessage" role="alert"></p>
+
+        </form>
+    </div>
+</div>
+    <header>
+        <h1>Student Attendance System</h1>
+        <button type="button" id="logoutButton" hidden>
+    Logout
+</button>
+        <p>Manage student records in one place</p>
+        
+<nav class="main-nav">
+    <button type="button" class="nav-btn active"
+        data-screen="dashboardScreen">Dashboard</button>
+
+    <button type="button" class="nav-btn"
+        data-screen="studentsScreen">Students</button>
+
+    <button type="button" class="nav-btn"
+        data-screen="attendanceScreen">Attendance</button>
+
+    <button type="button" class="nav-btn"
+        data-screen="historyScreen">Attendance History</button>
+</nav>
+
+    </header>
+
+    <main>
+<section class="card screen active" id="dashboardScreen">
+            <h2>Attendance Dashboard</h2>
+
+        <div class="form-grid">
+            <div class="dashboard-card">
+                <h3>Total Students</h3>
+                <h2 id="totalStudents">0</h2>
+            </div>
+
+            <div class="dashboard-card">
+                <h3>Present Today</h3>
+                <h2 id="presentCount">0</h2>
+            </div>
+
+            <div class="dashboard-card">
+                <h3>Absent Today</h3>
+                <h2 id="absentCount">0</h2>
+            </div>
+
+            <div class="dashboard-card">
+                <h3>Attendance Percentage</h3>
+                <h2 id="attendancePercentage">0%</h2>
+            </div>
+        </div>
+    </section>
+    <div class="screen" id="studentsScreen">
+        <section class="card">
+            <h2>Add Student</h2>
+
+            <form id="studentForm">
+                <div class="form-grid">
+                    <div>
+                        <label for="name">Student Name</label>
+                        <input
+                            id="name"
+                            type="text"
+                            placeholder="Enter student name"
+                            required
+                        >
+                    </div>
+
+                    <div>
+                        <label for="rollNumber">Roll Number</label>
+                        <input
+                            id="rollNumber"
+                            type="text"
+                            placeholder="Enter roll number"
+                            required
+                        >
+                    </div>
+
+                    <div>
+                        <label for="department">Department</label>
+                        <input
+                            id="department"
+                            type="text"
+                            placeholder="e.g. CSE"
+                            required
+                        >
+                    </div>
+                </div>
+
+                <button type="submit">Add Student</button>
+            </form>
+
+            <p id="message" role="status"></p>
+        </section>
+
+        <section class="card">
+            <h2>Registered Students</h2>
+
+            <p id="studentCount">Total students: 0</p>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Roll Number</th>
+                            <th>Department</th>
+                            <th>Attendance</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="studentTable"></tbody>
+                </table>
+            </div>
+        </section>
+        </div>
+        
+        <div class="screen" id="attendanceScreen">
+
+    <section class="card">
+        <h2>Mark Student Attendance</h2>
+
+        <p>Select Present or Absent for each student.</p>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Roll Number</th>
+                        <th>Department</th>
+                        <th>Today's Status</th>
+                        <th>Mark Attendance</th>
+                    </tr>
+                </thead>
+
+                <tbody id="attendanceStudentTable"></tbody>
+            </table>
+        </div>
+
+        <p id="attendanceMessage"></p>
+    </section>
+
+</div>
+<section class="card screen" id="historyScreen">
+    <h2>Attendance History</h2>
+
+    <label for="historyDate">Select Date:</label>
+    <input type="date" id="historyDate">
+
+    <button type="button" id="historySearchBtn">
+        View History
+    </button>
+
+    <p id="historyMessage"></p>
+
+ <div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Student ID</th>
+                <th>Student Name</th>
+                <th>Roll Number</th>
+                <th>Attendance Date</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody id="historyTable"></tbody>
+    </table>
+</div>
+</section>
+
+    </main>
+
+    <script>
+        const API_URL = "/api/students";
+        const ATTENDANCE_URL = "/api/attendance";
+
+        const studentForm = document.getElementById("studentForm");
+        const studentTable = document.getElementById("studentTable");
+        const studentCount = document.getElementById("studentCount");
+        const message = document.getElementById("message");
+
+        // Load all students
+// Load students into the separate Attendance screen
+async function loadAttendanceStudents() {
+    const table = document.getElementById("attendanceStudentTable");
+    const attendanceMessage = document.getElementById("attendanceMessage");
+
+    try {
+        const studentsResponse = await fetch(API_URL);
+
+        if (!studentsResponse.ok) {
+            throw new Error("Unable to load students");
+        }
+
+        const students = await studentsResponse.json();
+
+        const attendanceResponse = await fetch(
+            ATTENDANCE_URL + "?date=" + getToday()
+        );
+
+        if (!attendanceResponse.ok) {
+            throw new Error("Unable to load attendance");
+        }
+
+        const records = await attendanceResponse.json();
+
+        const latestRecords = new Map();
+
+        records.forEach(record => {
+            latestRecords.set(Number(record.studentId), record);
+        });
+
+        table.replaceChildren();
+
+        if (students.length === 0) {
+            attendanceMessage.textContent = "No students found. Add students first.";
+            return;
+        }
+
+        attendanceMessage.textContent = "";
+
+        students.forEach(student => {
+            const row = document.createElement("tr");
+
+            [student.name, student.rollNumber, student.department].forEach(value => {
+                const cell = document.createElement("td");
+                cell.textContent = value ?? "";
+                row.appendChild(cell);
+            });
+
+            const statusCell = document.createElement("td");
+            const record = latestRecords.get(Number(student.id));
+
+            statusCell.textContent = record ? record.status : "Not marked";
+            row.appendChild(statusCell);
+
+            const actionCell = document.createElement("td");
+
+            ["Present", "Absent"].forEach(status => {
+                const button = document.createElement("button");
+
+                button.type = "button";
+                button.textContent = status;
+                button.className = status === "Present"
+                    ? "attendance-btn present-btn"
+                    : "attendance-btn absent-btn";
+
+                button.addEventListener("click", async () => {
+                    button.disabled = true;
+
+                    try {
+                        await markAttendance(student.id, status);
+                        await loadAttendanceStudents();
+                    } finally {
+                        button.disabled = false;
+                    }
+                });
+
+                actionCell.appendChild(button);
+            });
+
+            row.appendChild(actionCell);
+            table.appendChild(row);
+        });
+
+    } catch (error) {
+        attendanceMessage.textContent =
+            "Unable to load attendance. Please check the backend.";
+    }
+}
+async function loadStudents() {
+    try {
+        const response = await fetch(API_URL);
+
+        if (!response.ok) {
+            throw new Error("Could not load students");
+        }
+
+        const students = await response.json();
+
+        // Fetch today's attendance records
+        const attendanceResponse = await fetch(
+            ATTENDANCE_URL + "?date=" + getToday()
+        );
+
+        if (!attendanceResponse.ok) {
+            throw new Error("Could not load attendance");
+        }
+
+        const attendanceRecords = await attendanceResponse.json();
+        
+document.getElementById("totalStudents").textContent =
+    students.length;
+
+
+const latestRecords = new Map();
+
+attendanceRecords.forEach(record => {
+    latestRecords.set(Number(record.studentId), record);
+});
+
+const uniqueAttendance = Array.from(latestRecords.values());
+
+const presentCount = uniqueAttendance.filter(
+    record => record.status === "Present"
+).length;
+
+const absentCount = uniqueAttendance.filter(
+    record => record.status === "Absent"
+).length;
+
+document.getElementById("presentCount").textContent =
+    presentCount;
+
+document.getElementById("absentCount").textContent =
+    absentCount;
+
+const markedCount = presentCount + absentCount;
+
+const percentage = markedCount === 0
+    ? 0
+    : Math.round((presentCount / markedCount) * 100);
+
+document.getElementById("attendancePercentage").textContent =
+    percentage + "%";
+
+
+        studentTable.replaceChildren();
+
+        students.forEach(student => {
+            const row = document.createElement("tr");
+
+            [student.name, student.rollNumber, student.department]
+                .forEach(value => {
+                    const cell = document.createElement("td");
+                    cell.textContent = value ?? "";
+                    row.appendChild(cell);
+                });
+
+            // Find this student's attendance for today
+           const studentRecords = attendanceRecords.filter(
+    item => Number(item.studentId) === Number(student.id)
+);
+
+const record = studentRecords.length > 0
+    ? studentRecords[studentRecords.length - 1]
+    : null;
+
+            const attendanceCell = document.createElement("td");
+            const status = record ? record.status : "Not marked";
+
+            attendanceCell.textContent = status;
+
+            if (status === "Present") {
+                attendanceCell.style.color = "#16a34a";
+            } else if (status === "Absent") {
+                attendanceCell.style.color = "#dc2626";
+            }
+
+            row.appendChild(attendanceCell);
+
+            // Attendance buttons
+            const actionCell = document.createElement("td");
+
+            ["Present", "Absent"].forEach(status => {
+                const button = document.createElement("button");
+
+                button.textContent = status;
+                button.className = status === "Present"
+                    ? "attendance-btn present-btn"
+                    : "attendance-btn absent-btn";
+
+                button.addEventListener("click", () => {
+                    markAttendance(student.id, status);
+                });
+
+                actionCell.appendChild(button);
+            });
+
+            // Delete button
+            const deleteButton = document.createElement("button");
+            deleteButton.textContent = "Delete";
+            deleteButton.className = "delete-btn";
+            deleteButton.addEventListener("click", () => {
+                deleteStudent(student.id);
+            });
+
+            actionCell.appendChild(deleteButton);
+            row.appendChild(actionCell);
+
+            studentTable.appendChild(row);
+        });
+
+        studentCount.textContent =
+            "Total students: " + students.length;
+
+    } catch (error) {
+        message.textContent =
+            "Unable to load students or attendance. Check the backend.";
+    }
+}
+
+function getToday() {
+    const now = new Date();
+
+    return [
+        now.getFullYear(),
+        String(now.getMonth() + 1).padStart(2, "0"),
+        String(now.getDate()).padStart(2, "0")
+    ].join("-");
+}
+
+
+        // Add a student
+        studentForm.addEventListener("submit", async function(event) {
+            event.preventDefault();
+
+            const student = {
+                name: document.getElementById("name").value.trim(),
+                rollNumber: document.getElementById("rollNumber").value.trim(),
+                department: document.getElementById("department").value.trim()
+            };
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(student)
+                });
+
+                if (!response.ok) {
+                    throw new Error("Could not save student");
+                }
+
+                studentForm.reset();
+                message.textContent = "Student added successfully!";
+
+                await loadStudents();
+
+            } catch (error) {
+                message.textContent =
+                    "Failed to add student. Check the backend and database.";
+            }
+        });
+
+        // Mark attendance
+        async function markAttendance(studentId, status) {
+            try {
+                const today = [
+                    new Date().getFullYear(),
+                    String(new Date().getMonth() + 1).padStart(2, "0"),
+                    String(new Date().getDate()).padStart(2, "0")
+                ].join("-");
+
+                const response = await fetch(ATTENDANCE_URL, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        studentId: studentId,
+                        attendanceDate: today,
+                        status: status
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error("Attendance could not be saved");
+                }
+
+                message.textContent =
+                    "Attendance marked " + status + " successfully!";
+                await loadStudents();
+            } catch (error) {
+                message.textContent =
+                    "Failed to mark attendance. Check the backend.";
+            }
+        }
+
+        // Delete a student
+        async function deleteStudent(id) {
+            if (!confirm("Do you want to delete this student?")) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/${id}`, {
+                    method: "DELETE"
+                });
+
+                if (!response.ok) {
+                    throw new Error("Delete failed");
+                }
+
+                message.textContent = "Student deleted successfully!";
+
+                await loadStudents();
+
+            } catch (error) {
+                message.textContent = "Failed to delete student.";
+            }
+        }
+
+        // Load students when the page opens
+        loadStudents();
+        
+const historyDate = document.getElementById("historyDate");
+const historyTable = document.getElementById("historyTable");
+const historyMessage = document.getElementById("historyMessage");
+
+historyDate.value = getToday();
+
+async function loadAttendanceHistory() {
+    const selectedDate = historyDate.value;
+
+    if (!selectedDate) {
+        historyMessage.textContent = "Please select a date.";
+        return;
+    }
+
+    try {
+        const response = await fetch(
+            ATTENDANCE_URL + "?date=" + selectedDate
+        );
+
+        if (!response.ok) {
+            throw new Error("Could not load attendance history");
+        }
+
+        const records = await response.json();
+
+        const latestRecords = new Map();
+
+        records.forEach(record => {
+            latestRecords.set(Number(record.studentId), record);
+        });
+
+        const uniqueRecords = Array.from(latestRecords.values());
+
+        historyTable.replaceChildren();
+
+        if (uniqueRecords.length === 0) {
+            historyMessage.textContent =
+                "No attendance records found for this date.";
+            return;
+        }
+
+        historyMessage.textContent =
+            "Attendance records: " + uniqueRecords.length;
+
+        uniqueRecords.forEach(record => {
+            const row = document.createElement("tr");
+
+            // Student ID
+            const idCell = document.createElement("td");
+            idCell.textContent = record.studentId ?? "-";
+
+            // Student Name
+            const nameCell = document.createElement("td");
+            nameCell.textContent = record.studentName ?? "Student not found";
+
+            // Roll Number
+            const rollCell = document.createElement("td");
+            rollCell.textContent = record.rollNumber ?? "-";
+
+            // Attendance Date
+            const dateCell = document.createElement("td");
+            dateCell.textContent = record.attendanceDate ?? "-";
+
+            // Attendance Status
+            const statusCell = document.createElement("td");
+            statusCell.textContent = record.status ?? "-";
+            statusCell.style.color =
+                record.status === "Present" ? "#16a34a" : "#dc2626";
+
+            row.append(
+                idCell,
+                nameCell,
+                rollCell,
+                dateCell,
+                statusCell
+            );
+
+            historyTable.appendChild(row);
+        });
+
+    } catch (error) {
+        console.error("Attendance history error:", error);
+
+        historyMessage.textContent =
+            "Failed to load history. Please check the backend.";
+    }
+}
+
+document.getElementById("historySearchBtn")
+    .addEventListener("click", loadAttendanceHistory);
+
+    </script>
+
+<script>
+    const navButtons = document.querySelectorAll(".nav-btn");
+    const screens = document.querySelectorAll(".screen");
+
+    navButtons.forEach(button => {
+        button.addEventListener("click", () => {
+            const targetScreen = button.dataset.screen;
+            if (targetScreen === "attendanceScreen") {
+    loadAttendanceStudents();
+}
+            // Hide all screens
+            screens.forEach(screen => {
+                screen.classList.remove("active");
+            });
+
+            // Show selected screen
+            document.getElementById(targetScreen)
+                .classList.add("active");
+
+            // Update selected navigation button
+            navButtons.forEach(btn => {
+                btn.classList.remove("active");
+            });
+
+            button.classList.add("active");
+        });
+    });
+</script>
+<script>
+    // Admin Login
+    const loginForm = document.getElementById("loginForm");
+    const loginMessage = document.getElementById("loginMessage");
+    const loginScreen = document.getElementById("loginScreen");
+    const logoutButton = document.getElementById("logoutButton");
+
+    // Login using Java Spring Boot backend
+loginForm.addEventListener("submit", async function(event) {
+    event.preventDefault();
+
+    const username =
+        document.getElementById("adminUsername").value.trim();
+
+    const password =
+        document.getElementById("adminPassword").value;
+
+    loginMessage.textContent = "Logging in...";
+
+    try {
+        const response = await fetch("/api/admin/login", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            credentials: "same-origin",
+            body: JSON.stringify({
+                username: username,
+                password: password
+            })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            document.body.classList.add("logged-in");
+            loginScreen.style.display = "none";
+            logoutButton.hidden = false;
+            loginMessage.textContent = "";
+
+            // Open Dashboard
+            document.querySelectorAll(".screen").forEach(screen => {
+                screen.classList.remove("active");
+            });
+
+            document.getElementById("dashboardScreen")
+                .classList.add("active");
+
+            document.querySelectorAll(".nav-btn").forEach(button => {
+                button.classList.remove("active");
+            });
+
+            document.querySelector(
+                '[data-screen="dashboardScreen"]'
+            ).classList.add("active");
+
+        } else {
+            loginMessage.textContent =
+                result.message || "Invalid username or password!";
+        }
+
+    } catch (error) {
+        loginMessage.textContent =
+            "Server connection failed. Please check the backend.";
+        console.error("Login error:", error);
+    }
+});
+
+
+// Logout using Java Spring Boot backend
+logoutButton.addEventListener("click", async function() {
+    try {
+        await fetch("/api/admin/logout", {
+            method: "POST",
+            credentials: "same-origin"
+        });
+    } catch (error) {
+        console.error("Logout error:", error);
+    }
+
+    document.body.classList.remove("logged-in");
+    loginScreen.style.display = "flex";
+    logoutButton.hidden = true;
+
+    loginForm.reset();
+    loginMessage.textContent = "";
+
+    document.querySelectorAll(".screen").forEach(screen => {
+        screen.classList.remove("active");
+    });
+
+    document.getElementById("dashboardScreen")
+        .classList.add("active");
+
+    document.querySelectorAll(".nav-btn").forEach(button => {
+        button.classList.remove("active");
+    });
+});
+</script>
+</body>
+</html>
